@@ -1,0 +1,74 @@
+name: "Forward PR ticket"
+description: "Forward PR ticket to another"
+author: "tagoh"
+inputs:
+  src_token:
+    description: "Authentication token for source (i.e. GITHUB_TOKEN)"
+    required: true
+  dest_token:
+    description: "Authentication token for destination"
+    required: true
+  dest_repo:
+    description: "Destination GitLab repository"
+    required: true
+  title:
+    description: "Title"
+    required: true
+  body:
+    description: "Body"
+    required: true
+  url:
+    description: "Source URL"
+    required: true
+  patch:
+    description: "Patch URL"
+    required: true
+  reporter:
+    description: "Reporter name for source"
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Setup
+      run: |
+        apt update
+        apt install snapd
+        snap install glab
+        (type -p wget >/dev/null || (sudo apt update && sudo apt-get install wget -y)) \
+          && sudo mkdir -p -m 755 /etc/apt/keyrings \
+          && out=$(mktemp) && wget -nv -O$out https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+          && cat $out | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+          && sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+          && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+        && sudo apt update \
+        && sudo apt install gh -y
+    - name: Forward
+      id: forward
+      env:
+        TITLE: ${{ inputs.title }}
+        BODY: ${{ inputs.body }}
+        URL: ${{ inputs.url }}
+        PATCH: ${{ inputs.patch }}
+        FROM: ${{ inputs.reporter }}
+        GITLAB_TOKEN: ${{ inputs.dest_token }}
+      run: |
+        out=$(glab issue create -R ${{ inputs.dest_repo }} -t "$TITLE" -d "This ticket has been forwarded from the following GitHub pull-request automatically to not lose vaulable contributions:
+
+GitHub owner: $FROM
+
+GitHub PR URL: $URL
+
+Patch URL: $PATCH
+
+Body of the PR:
+
+$BODY" -l forwarded -y|grep -E "http.*issue"|awk "{print $1}")
+        echo "url=$out" >> $GITHUB_OUTPUT
+    - name: Close PR
+      env:
+        GH_TOKEN: ${{ inputs.src_token }}
+      run: |
+        gh pr close "${{ github.event.number }}" -c "Thank you for contributing!
+
+This is the read-only mirror. We use GitLab for code review. As such we have forwarded this to ${{ steps.forward.outputs.url }}. Sorry to bother you but we appreciate if you can submit Merge-request on GitLab again."
