@@ -1,4 +1,4 @@
-name: Transfer PR
+name: Forward PR
 
 on:
   pull_request:
@@ -9,6 +9,8 @@ jobs:
   transfer:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
       - name: Forward
         uses: ./.github/actions/forward
         with:
