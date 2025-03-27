@@ -56,11 +56,25 @@ runs:
         GLAB_CONFIG_DIR: ./.config/glab-cli
       shell: bash
       run: |
-        out=$(glab issue create -R ${{ inputs.dest_repo }} -t "$TITLE" -d "This ticket has been forwarded from the following GitHub pull-request automatically to not lose vaulable contributions:\n\nGitHub owner: $FROM\n\nGitHub PR URL: $URL\n\nPatch URL: $PATCH\n\nBody of the PR:\n\n$BODY" -l forwarded -y|grep -E "http.*issue"|awk "{print $1}")
+        out=$(glab issue create -R ${{ inputs.dest_repo }} -t "$TITLE" -d "This ticket has been forwarded from the following GitHub pull-request automatically to not lose vaulable contributions:
+
+        GitHub owner: $FROM
+
+        GitHub PR URL: $URL
+
+        Patch URL: $PATCH
+
+        Body of the PR:
+
+        $BODY" -l forwarded -y|grep -E "http.*issue"|awk "{print $1}")
         echo "url=$out" >> $GITHUB_OUTPUT
     - name: Close PR
       env:
         GH_TOKEN: ${{ inputs.src_token }}
       shell: bash
       run: |
-        gh pr close "${{ github.event.number }}" -c "Thank you for contributing!\n\nThis is the read-only mirror. We use GitLab for code review. As such we have forwarded this to ${{ steps.forward.outputs.url }}. Sorry to bother you but we appreciate if you can submit Merge-request on GitLab again."
+        gh pr close "${{ github.event.number }}" -c "Thank you for contributing!
+
+        This is the read-only mirror. We use GitLab for code review. As such we have forwarded this to ${{ steps.forward.outputs.url }}.
+
+        Sorry to bother you but we appreciate if you can submit Merge-request on GitLab again."
