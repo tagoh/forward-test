@@ -31,6 +31,7 @@ runs:
   using: composite
   steps:
     - name: Setup
+      shell: bash
       run: |
         apt update
         apt install snapd
@@ -52,6 +53,7 @@ runs:
         PATCH: ${{ inputs.patch }}
         FROM: ${{ inputs.reporter }}
         GITLAB_TOKEN: ${{ inputs.dest_token }}
+      shell: bash
       run: |
         out=$(glab issue create -R ${{ inputs.dest_repo }} -t "$TITLE" -d "This ticket has been forwarded from the following GitHub pull-request automatically to not lose vaulable contributions:
 
@@ -68,6 +70,7 @@ $BODY" -l forwarded -y|grep -E "http.*issue"|awk "{print $1}")
     - name: Close PR
       env:
         GH_TOKEN: ${{ inputs.src_token }}
+      shell: bash
       run: |
         gh pr close "${{ github.event.number }}" -c "Thank you for contributing!
 
