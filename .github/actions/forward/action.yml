@@ -53,9 +53,10 @@ runs:
         PATCH: ${{ inputs.patch }}
         FROM: ${{ inputs.reporter }}
         GITLAB_TOKEN: ${{ inputs.dest_token }}
+        GLAB_CONFIG_DIR: ./.config/glab-cli
       shell: bash
       run: |
-        out=$(sudo glab issue create -R ${{ inputs.dest_repo }} -t "$TITLE" -d "This ticket has been forwarded from the following GitHub pull-request automatically to not lose vaulable contributions:\n\nGitHub owner: $FROM\n\nGitHub PR URL: $URL\n\nPatch URL: $PATCH\n\nBody of the PR:\n\n$BODY" -l forwarded -y|grep -E "http.*issue"|awk "{print $1}")
+        out=$(glab issue create -R ${{ inputs.dest_repo }} -t "$TITLE" -d "This ticket has been forwarded from the following GitHub pull-request automatically to not lose vaulable contributions:\n\nGitHub owner: $FROM\n\nGitHub PR URL: $URL\n\nPatch URL: $PATCH\n\nBody of the PR:\n\n$BODY" -l forwarded -y|grep -E "http.*issue"|awk "{print $1}")
         echo "url=$out" >> $GITHUB_OUTPUT
     - name: Close PR
       env:
